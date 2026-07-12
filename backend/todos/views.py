@@ -1,8 +1,7 @@
 from rest_framework import viewsets, generics, permissions
 from django.contrib.auth.models import User
 from .models import Todo
-from .serializers import TodoSerializer, Re
-gisterSerializer
+from .serializers import TodoSerializer, RegisterSerializer
 
 
 class TodoViewSet(viewsets.ModelViewSet):
