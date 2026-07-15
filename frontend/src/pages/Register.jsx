@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
+import '../App.css';
+import logo from '../assets/planify-logo.svg';
+import background from '../assets/background.jpg';
+
 
 function Register() {
   const [username, setUsername] = useState('');
@@ -21,33 +25,46 @@ function Register() {
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Register</button>
-      </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <p>Already have an account? <Link to="/login">Login</Link></p>
+    <div style={{ 
+      backgroundImage: `url(${background})`,
+      backgroundSize: 'cover',
+      minHeight: '100vh' 
+    }}>
+      <div id="logo-container">
+        <img src={logo} alt="Logo" id="sign-logo" />
+      </div>
+      <div className="signin-container">
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="data-field"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="data-field"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="data-field"
+          />
+          <button type="submit"
+          className="signin-button"
+          >Register</button>
+        </form>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <p>Already have an account? <Link className="sign-link"to="/login">Login</Link></p>
+      </div>
     </div>
   );
 }

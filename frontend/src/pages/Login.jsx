@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
+import '../App.css';
+import logo from '../assets/planify-logo.svg';
+import background from '../assets/background.jpg';
 
 function Login() {
+ 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,27 +26,38 @@ function Login() {
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <p>Don't have an account? <Link to="/register">Register</Link></p>
+    <div style={{ 
+      backgroundImage: `url(${background})`,
+      backgroundSize: 'cover',
+      minHeight: '100vh' 
+    }}>
+      <div id="logo-container">
+        <img src={logo} alt="Logo" id="sign-logo" />
+      </div>
+      <div className="signin-container">
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="data-field"
+          />
+        
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="data-field"
+          />
+          <button  type="submit" className="signin-button">Login</button>
+        </form>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <p>Don't have an account? <Link className="sign-link" to="/register">Register</Link></p>
+      </div>
     </div>
   );
 }

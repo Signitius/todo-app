@@ -1,0 +1,11 @@
+<svg viewBox="0 0 320 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="8" y1="8" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="64" height="64" rx="16" fill="url(#grad)"/>
+  <path d="M25.9 42.5 L36.5 53.5 L54.4 28.5" fill="none" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="90" y="51" font-family="'Poppins','Segoe UI',Arial,sans-serif" font-size="38" font-weight="700" fill="#1E1B4B" letter-spacing="-0.5">Planify</text>
+</svg>
