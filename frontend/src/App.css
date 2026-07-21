@@ -1,59 +1,266 @@
-
-
-
-
-.signin-container {
+.auth-page {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #F5F3FF 0%, #EDE9FE 45%, #F8F7FB 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 100vh;
+  justify-content: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  position: relative;
 }
 
 
+
+#logo-container {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  z-index: 1;
+}
+
+#sign-logo {
+  width: 180px;
+  height: auto;
+}
+
+.signin-container {
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px 28px;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.12);
+  width: 100%;
+  max-width: 340px;
+  box-sizing: border-box;
+  z-index: 1;
+}
 
 .signin-container form {
   display: flex;
   flex-direction: column;
-  width: 300px;
+  width: 100%;
 }
 
-#logo-container {
-  padding: 20px;
-  justify-content: center;
-  margin-top: 100px;
-}
-#sign-logo {
-  width: 200px;
-  height: auto;
-  margin-bottom: 20px;
-}
 .signin-button {
   background-color: #8B5CF6;
   color: white;
   padding: 10px;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
   width: 100%;
+  font-weight: 600;
+  transition: background-color 0.15s ease;
 }
 
 .signin-button:hover {
   background-color: #1E1B4B;
 }
 
+.signin-button:focus-visible,
+.data-field:focus-visible {
+  outline: 2px solid #4C3A9E;
+  outline-offset: 2px;
+}
+
 .data-field {
   padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  margin-bottom: 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.95rem;
 }
 
 .sign-link {
   color: #8B5CF6;
   text-decoration: none;
-  margin-top: 10px;
+  margin-top: 12px;
+  display: inline-block;
+  font-weight: 500;
+}
+
+.sign-link:hover {
+  text-decoration: underline;
 }
 
 
+
+
+.todos-page {
+  min-height: 100vh;
+  background-color: #F8F7FB;
+}
+
+.todos-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 28px;
+  padding: 32px 48px;
+  align-items: start;
+}
+
+.panel-heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: #1E1B4B;
+}
+
+/* ---- List ---- */
+
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty-state {
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  padding: 32px;
+  color: #6B7280;
+  text-align: center;
+}
+
+.todo-card {
+  display: flex;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(30, 27, 75, 0.08);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.todo-card:hover {
+  box-shadow: 0 4px 12px rgba(30, 27, 75, 0.12);
+  transform: translateY(-1px);
+}
+
+.todo-card-accent {
+  width: 6px;
+  background: var(--priority-color);
+  flex-shrink: 0;
+}
+
+.todo-card-body {
+  flex: 1;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.todo-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.todo-card-title {
+  font-weight: 600;
+  color: #1F2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.priority-chip {
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.todo-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.due-pill {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #F3F4F6;
+  color: #6B7280;
+}
+
+.due-pill--overdue { background: #FEE2E2; color: #B91C1C; }
+.due-pill--today { background: #FEF3C7; color: #92400E; }
+.due-pill--soon { color: #374151; }
+
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+}
+
+.delete-button:hover {
+  background: #F3F4F6;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.delete-button:hover {
+  background: #FEE2E2;
+  color: #EF4444;
+}
+
+.delete-button:focus-visible {
+  outline: 2px solid #EF4444;
+  outline-offset: 2px;
+}
+/* ---- Create panel ---- */
+
+.create-todo-panel {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(30, 27, 75, 0.08);
+  position: sticky;
+  top: 32px;
+}
+
+.create-todo-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.error-text {
+  color: #B91C1C;
+  padding: 0 48px 24px;
+}
+
+@media (max-width: 800px) {
+  .todos-layout {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+  .create-todo-panel {
+    position: static;
+  }
+}
 
 
 
@@ -63,17 +270,116 @@
   width: 100%;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 
+#menu-logo {
+  height: 32px;
+  width: auto;
+}
 
-#todos-container {
+#logout-button {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+#logout-button:hover {
+  background: #fff;
+  color: #1E1B4B;
+  border-color: #fff;
+}
+
+/* ---- Create panel header (desktop: no close button needed) ---- */
+
+.create-todo-panel-header {
   display: flex;
-  flex-direction: row;
+  align-items: center;
   justify-content: space-between;
 }
 
-.todo-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
+.close-form-button {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #6B7280;
+  padding: 4px 8px;
+}
+
+/* ---- FAB: hidden on desktop, only for mobile ---- */
+
+.fab-add-button {
+  display: none;
+}
+
+.modal-backdrop {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  .todos-layout {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  /* Create panel becomes an overlay, hidden until opened */
+  .create-todo-panel {
+    display: none;
+    position: fixed;
+    inset: auto 16px 16px 16px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 60;
+  }
+
+  .create-todo-panel.is-open {
+    display: block;
+  }
+
+  .close-form-button {
+    display: block;
+  }
+
+  .modal-backdrop.is-open,
+  .modal-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 27, 75, 0.4);
+    z-index: 55;
+  }
+
+  .fab-add-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #8B5CF6;
+    color: #fff;
+    font-size: 1.8rem;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(30, 27, 75, 0.3);
+    z-index: 65;
+  }
+
+  .fab-add-button:hover {
+    background: #1E1B4B;
+  }
 }

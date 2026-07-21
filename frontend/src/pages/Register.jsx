@@ -3,8 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import '../App.css';
 import logo from '../assets/planify-logo.svg';
-import background from '../assets/background.jpg';
-
 
 function Register() {
   const [username, setUsername] = useState('');
@@ -25,11 +23,7 @@ function Register() {
   };
 
   return (
-    <div style={{ 
-      backgroundImage: `url(${background})`,
-      backgroundSize: 'cover',
-      minHeight: '100vh' 
-    }}>
+    <div className="auth-page">
       <div id="logo-container">
         <img src={logo} alt="Logo" id="sign-logo" />
       </div>
@@ -58,12 +52,10 @@ function Register() {
             required
             className="data-field"
           />
-          <button type="submit"
-          className="signin-button"
-          >Register</button>
+          <button type="submit" className="signin-button">Register</button>
         </form>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <p>Already have an account? <Link className="sign-link"to="/login">Login</Link></p>
+        {error && <p className="error-text">{error}</p>}
+        <p>Already have an account? <Link className="sign-link" to="/login">Login</Link></p>
       </div>
     </div>
   );
