@@ -65,6 +65,13 @@ function TodoCard({ todo, onDelete }) {
         </div>
         <div className="todo-card-bottom">
           <span className={`due-pill due-pill--${dueInfo.status}`}>{dueInfo.text}</span>
+          <button 
+            className="edit-button"
+            onClick={() => alert('Edit functionality not implemented yet.')}
+            aria-label={`Edit "${todo.title}"`}
+          >
+            ✎
+          </button>
           <button
             className="delete-button"
             onClick={() => onDelete(todo.id)}
@@ -81,6 +88,7 @@ function TodoCard({ todo, onDelete }) {
 function Todos() {
   const [todos, setTodos] = useState([]);
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState('medium');
   const [error, setError] = useState('');
@@ -172,6 +180,13 @@ function Todos() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              className="data-field"
+            />
+            <input
+              type="text"
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="data-field"
             />
             <input

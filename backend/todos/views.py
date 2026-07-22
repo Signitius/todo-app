@@ -8,6 +8,8 @@ class TodoViewSet(viewsets.ModelViewSet):
     serializer_class = TodoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    
+
     def get_queryset(self):
         return Todo.objects.filter(user=self.request.user).order_by('due_date')
 
