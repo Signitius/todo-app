@@ -318,7 +318,7 @@
 
 /* ---- FAB: hidden on desktop, only for mobile ---- */
 
-.fab-add-button {
+#fab-add-button {
   display: none;
 }
 
@@ -359,7 +359,7 @@
     z-index: 55;
   }
 
-  .fab-add-button {
+  #fab-add-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -379,7 +379,7 @@
     z-index: 65;
   }
 
-  .fab-add-button:hover {
+  #fab-add-button:hover {
     background: #1E1B4B;
   }
 }

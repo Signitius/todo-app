@@ -316,18 +316,19 @@ const handleDelete = async (id) => {
         </div>
       </div>
 
-      <button
-        type="button"
-        className="fab-add-button"
-        onClick={openCreateForm}
-        aria-label="New todo"
-      >
+      {!isFormOpen && (
+        <button
+          type="button"
+          id="fab-add-button"
+          onClick={openCreateForm}
+          aria-label="New todo"
+        >
         +
-      </button>
+        </button>
+      )}
 
       {error && <p className="error-text">{error}</p>}
     </div>
   );
 }
-
 export default Todos;
