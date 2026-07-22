@@ -423,3 +423,71 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+.todo-card-description {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6B7280;
+  line-height: 1.4;
+}
+
+.todo-card-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.icon-button:hover {
+  background: #F3F4F6;
+  color: #4B5563;
+}
+
+.icon-button--danger:hover {
+  background: #FEE2E2;
+  color: #EF4444;
+}
+
+.icon-button:focus-visible {
+  outline: 2px solid #8B5CF6;
+  outline-offset: 2px;
+}
+
+textarea.data-field {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.due-date-field {
+  color: #1F2937;
+  position: relative;
+}
+
+.date-trigger {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.date-trigger:hover {
+  border-color: #8B5CF6;
+}
+
+.due-date-hidden-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
