@@ -1,7 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class Task(models.Model):
+    todo=models.ForeignKey(Todo, on_delete=models.CASCADE, related_name='tasks')
 
+
+
+
+
+
+
+
+
+
+    
 class Todo(models.Model):
     PRIORITY_CHOICES = [
         ('low', 'Low'),
