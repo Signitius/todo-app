@@ -2,9 +2,11 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Task(models.Model):
+    STATUS_CHOICES = [('pending', 'Pending'), ('in_progress', 'In Progress'), ('done', 'Done')]
+
     todo=models.ForeignKey(Todo, on_delete=models.CASCADE, related_name='tasks')
-
-
+    name=models.CharField(max_length=255)
+    status=models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
 
 
