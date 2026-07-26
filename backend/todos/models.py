@@ -1,15 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-class Task(models.Model):
-    STATUS_CHOICES = [('pending', 'Pending'), ('in_progress', 'In Progress'), ('done', 'Done')]
-    
-    todo = models.ForeignKey(Todo, related_name='tasks', on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    accumulated_seconds = models.IntegerField(default=0)  # total logged time so far
-    started_at = models.DateTimeField(null=True, blank=True)  # non-null only while actively running
 class Todo(models.Model):
     PRIORITY_CHOICES = [
         ('low', 'Low'),
@@ -27,3 +18,36 @@ class Todo(models.Model):
 
     def __str__(self):
         return self.title
+
+class Task(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('done', 'Done'),
+    ]
+
+    todo = models.ForeignKey(
+        Todo,
+        related_name='tasks',
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+    )
+    accumulated_seconds = models.IntegerField(default=0)
+    started_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.status})"
+
+
+
+
