@@ -38,6 +38,7 @@ class Task(models.Model):
         choices=STATUS_CHOICES,
         default='pending',
     )
+    target_duration_seconds = models.IntegerField(default=1500)
     accumulated_seconds = models.IntegerField(default=0)
     started_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
