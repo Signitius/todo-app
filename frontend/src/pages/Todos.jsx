@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import '../App.css';
 import logo from '../assets/planify-logo.svg';
-import { useRef } from 'react';
 
 function formatReadableDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
@@ -12,6 +11,17 @@ function formatReadableDate(dateStr) {
     month: 'long',
     day: 'numeric',
   });
+}
+
+function CalendarIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4" />
+      <path d="M8 2v4" />
+      <path d="M3 10h18" />
+    </svg>
+  );
 }
 
 function DueDateField({ value, onChange }) {
@@ -34,7 +44,8 @@ function DueDateField({ value, onChange }) {
         className="data-field date-trigger"
         onClick={openPicker}
       >
-        {value ? formatReadableDate(value) : 'Select due date'}
+        <CalendarIcon />
+        <span>{value ? formatReadableDate(value) : 'Select due date'}</span>
       </button>
       <input
         ref={inputRef}
@@ -116,7 +127,7 @@ function TodoCard({ todo, onDelete, onEdit }) {
         </div>
 
         {todo.description && (
-          <p className="todo-card-description">{todo.description}</p>
+          <p className="todo-card-description">{truncate(todo.description)}</p>
         )}
 
         <div className="todo-card-bottom">
@@ -155,7 +166,6 @@ function Todos() {
 
   const isEditing = editingId !== null;
 
-
   useEffect(() => {
     fetchTodos();
   }, []);
@@ -183,52 +193,52 @@ function Todos() {
     setEditingId(null);
   };
 
-
-const fetchTodos = async () => {
-  try {
-    const response = await api.get('todos/');
-    setTodos(response.data);
-    setError('');
-  } catch (err) {
-    setError('Could not load todos.');
-  }
-};
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  const payload = {
-    title: form.title,
-    description: form.description,
-    due_date: form.dueDate || null,
-    priority: form.priority,
+  const fetchTodos = async () => {
+    try {
+      const response = await api.get('todos/');
+      setTodos(response.data);
+      setError('');
+    } catch (err) {
+      setError('Could not load todos.');
+    }
   };
 
-  try {
-    if (isEditing) {
-      await api.patch(`todos/${editingId}/`, payload);
-    } else {
-      await api.post('todos/', payload);
-    }
-    closeForm();
-    fetchTodos();
-  } catch (err) {
-    setError(isEditing ? 'Could not update todo.' : 'Could not create todo.');
-  }
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    const payload = {
+      title: form.title,
+      description: form.description,
+      due_date: form.dueDate || null,
+      priority: form.priority,
+    };
 
-const handleDelete = async (id) => {
-  setError('');
-  try {
-    await api.delete(`todos/${id}/`);
-    if (editingId === id) {
+    try {
+      if (isEditing) {
+        await api.patch(`todos/${editingId}/`, payload);
+      } else {
+        await api.post('todos/', payload);
+      }
       closeForm();
+      fetchTodos();
+    } catch (err) {
+      setError(isEditing ? 'Could not update todo.' : 'Could not create todo.');
     }
-    fetchTodos();
-  } catch (err) {
-    setError('Could not delete todo.');
-  }
-};
+  };
+
+  const handleDelete = async (id) => {
+    setError('');
+    try {
+      await api.delete(`todos/${id}/`);
+      if (editingId === id) {
+        closeForm();
+      }
+      fetchTodos();
+    } catch (err) {
+      setError('Could not delete todo.');
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('access');
     localStorage.removeItem('refresh');
@@ -323,7 +333,7 @@ const handleDelete = async (id) => {
           onClick={openCreateForm}
           aria-label="New todo"
         >
-        +
+          +
         </button>
       )}
 
@@ -331,4 +341,5 @@ const handleDelete = async (id) => {
     </div>
   );
 }
+
 export default Todos;
