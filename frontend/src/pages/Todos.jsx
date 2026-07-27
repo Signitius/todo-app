@@ -230,10 +230,10 @@ function TaskCard({ task, onStart, onPause, onFinish, onEdit, onDelete }) {
   );
 }
 
-function TaskSection({ title, tasks, taskHandlers }) {
+function TaskSection({ title, variant, tasks, taskHandlers }) {
   if (tasks.length === 0) return null;
   return (
-    <div className="task-section">
+    <div className={`task-section task-section--${variant}`}>
       <h4 className="task-section-heading">{title}</h4>
       <div className="task-list">
         {tasks.map((task) => (
@@ -257,7 +257,6 @@ function TodoCard({
   taskForm,
   setTaskForm,
   onOpenAddTask,
-  onOpenEditTask,
   onCloseTaskForm,
   onTaskSubmit,
   taskHandlers,
@@ -273,12 +272,7 @@ function TodoCard({
       <div className="todo-card-body">
         <div className="todo-card-top todo-card-top--clickable" onClick={() => onToggleExpand(todo.id)}>
           <span className="todo-card-title">{todo.title}</span>
-          <div className="todo-card-top-right">
-            <span className="priority-chip" style={{ backgroundColor: priority.color }}>
-              {priority.label}
-            </span>
-            <ChevronIcon expanded={isExpanded} />
-          </div>
+          <ChevronIcon expanded={isExpanded} />
         </div>
 
         {todo.description && (
@@ -286,6 +280,9 @@ function TodoCard({
         )}
 
         <div className="todo-card-bottom">
+          <span className="priority-label" style={{ color: priority.color }}>
+            {priority.label}
+          </span>
           <span className={`due-pill due-pill--${dueInfo.status}`}>{dueInfo.text}</span>
           <div className="todo-card-actions">
             <button className="icon-button" onClick={() => onEdit(todo)} aria-label={`Edit "${todo.title}"`}>
@@ -303,12 +300,12 @@ function TodoCard({
 
         {isExpanded && (
           <div className="todo-tasks-section">
-            <TaskSection title="In progress" tasks={grouped.in_progress} taskHandlers={taskHandlers} />
-            <TaskSection title="Pending" tasks={grouped.pending} taskHandlers={taskHandlers} />
-            <TaskSection title="Done" tasks={grouped.done} taskHandlers={taskHandlers} />
+            <TaskSection title="In progress" variant="in_progress" tasks={grouped.in_progress} taskHandlers={taskHandlers} />
+            <TaskSection title="Pending" variant="pending" tasks={grouped.pending} taskHandlers={taskHandlers} />
+            <TaskSection title="Done" variant="done" tasks={grouped.done} taskHandlers={taskHandlers} />
 
             {tasks.length === 0 && !taskFormOpen && (
-              <p className="task-empty-state">No tasks yet.</p>
+              <p className="task-empty-state">No tasks yet — break this down into steps.</p>
             )}
 
             {taskFormOpen ? (
@@ -321,25 +318,23 @@ function TodoCard({
                   required
                   className="data-field"
                 />
-                <div className="task-form-row">
-                  <label className="task-form-minutes-label">
-                    Target minutes
-                    <input
-                      type="number"
-                      min="1"
-                      value={taskForm.targetMinutes}
-                      onChange={(e) => setTaskForm({ ...taskForm, targetMinutes: e.target.value })}
-                      className="data-field"
-                    />
-                  </label>
-                  <div className="task-form-buttons">
-                    <button type="button" className="icon-button" onClick={onCloseTaskForm} aria-label="Cancel">
-                      Cancel
-                    </button>
-                    <button type="submit" className="signin-button task-form-submit">
-                      {editingTaskId ? 'Save' : 'Add'}
-                    </button>
-                  </div>
+                <label className="task-form-minutes-label">
+                  Target minutes
+                  <input
+                    type="number"
+                    min="1"
+                    value={taskForm.targetMinutes}
+                    onChange={(e) => setTaskForm({ ...taskForm, targetMinutes: e.target.value })}
+                    className="data-field"
+                  />
+                </label>
+                <div className="task-form-buttons">
+                  <button type="button" className="task-cancel-button" onClick={onCloseTaskForm}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="signin-button task-form-submit">
+                    {editingTaskId ? 'Save' : 'Add'}
+                  </button>
                 </div>
               </form>
             ) : (
@@ -560,7 +555,6 @@ function Todos() {
                   taskForm={taskForm}
                   setTaskForm={setTaskForm}
                   onOpenAddTask={openAddTaskForm}
-                  onOpenEditTask={openEditTaskForm}
                   onCloseTaskForm={closeTaskForm}
                   onTaskSubmit={handleTaskSubmit}
                   taskHandlers={taskHandlers}
