@@ -24,6 +24,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class TodoSerializer(serializers.ModelSerializer):
+    tasks = TaskSerializer(many=True, read_only=True)
     class Meta:
         model = Todo
         fields = ['id', 'title', 'description', 'due_date', 'priority', 'completed', 'created_at','tasks']
