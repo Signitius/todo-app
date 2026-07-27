@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Todo
+from .models import Todo, Task
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -9,7 +9,7 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = [
-            'id', 'todo', 'name', 'description', 'status',
+            'id', 'todo', 'name', 'status',
             'accumulated_seconds', 'started_at', 'elapsed_seconds', 'created_at',
         ]
         read_only_fields = ['id', 'accumulated_seconds', 'started_at', 'created_at']

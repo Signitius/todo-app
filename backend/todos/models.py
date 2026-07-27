@@ -32,7 +32,7 @@ class Task(models.Model):
         on_delete=models.CASCADE,
     )
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,

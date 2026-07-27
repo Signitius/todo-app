@@ -80,4 +80,15 @@ def pause_task(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 def finish_task(request, pk):
     try:
-        task = Task.objects.get(pk=pk, todo
+        task = Task.objects.get(pk=pk, todo__user=request.user)
+    except Task.DoesNotExist:
+        return Response({'error': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if task.started_at is not None:
+        elapsed = (timezone.now() - task.started_at).total_seconds()
+        task.accumulated_seconds += int(elapsed)
+        task.started_at = None
+
+    task.status = 'done'
+    task.save()
+    return Response(TaskSerializer(task).data)
