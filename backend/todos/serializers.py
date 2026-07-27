@@ -5,12 +5,14 @@ from .models import Todo, Task
 
 class TaskSerializer(serializers.ModelSerializer):
     elapsed_seconds = serializers.SerializerMethodField()
+    remaining_seconds = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
         fields = [
-            'id', 'todo', 'name', 'status',
-            'accumulated_seconds', 'started_at', 'elapsed_seconds', 'created_at',
+            'id', 'todo', 'name', 'status', 'target_duration_seconds',
+            'accumulated_seconds', 'started_at', 'elapsed_seconds',
+            'remaining_seconds', 'created_at',
         ]
         read_only_fields = ['id', 'accumulated_seconds', 'started_at', 'created_at']
 
@@ -21,6 +23,8 @@ class TaskSerializer(serializers.ModelSerializer):
             return obj.accumulated_seconds + int(current_session)
         return obj.accumulated_seconds
 
+    def get_remaining_seconds(self, obj):
+        return obj.target_duration_seconds - self.get_elapsed_seconds(obj)
 
 
 class TodoSerializer(serializers.ModelSerializer):
