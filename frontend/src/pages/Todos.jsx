@@ -40,6 +40,52 @@ function useLiveRemaining(task) {
   return task.target_duration_seconds - elapsed;
 }
 
+/* ---------- Timer expiry alert ---------- */
+
+function playExpiryAlert() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+
+    const beep = (startOffset) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      const t0 = ctx.currentTime + startOffset;
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.45);
+    };
+
+    beep(0);
+    beep(0.3);
+  } catch (e) {
+    // Web Audio unavailable — fail silently, visual pulse still applies.
+  }
+}
+
+function useExpiryAlert(task, remaining, isRunning) {
+  const alertedRef = useRef(false);
+
+  // Reset the one-shot alert whenever a task starts a fresh run.
+  useEffect(() => {
+    alertedRef.current = false;
+  }, [task.started_at]);
+
+  useEffect(() => {
+    if (isRunning && remaining <= 0 && !alertedRef.current) {
+      alertedRef.current = true;
+      playExpiryAlert();
+    }
+  }, [isRunning, remaining]);
+}
+
 /* ---------- Icons ---------- */
 
 function CalendarIcon() {
@@ -145,16 +191,32 @@ function DueDateField({ value, onChange }) {
   );
 }
 
-/* ---------- Priority / due helpers ---------- */
+/* ---------- Status / due helpers ---------- */
 
-const PRIORITY_CONFIG = {
-  low: { label: 'Low', color: '#10B981' },
-  medium: { label: 'Medium', color: '#F59E0B' },
-  high: { label: 'High', color: '#EF4444' },
+const STATUS_CONFIG = {
+  pending: { label: 'Pending', color: '#9CA3AF' },
+  in_progress: { label: 'In progress', color: '#8B5CF6' },
+  done: { label: 'Done', color: '#10B981' },
 };
 
+const STATUS_ORDER_LIST = ['in_progress', 'pending', 'done'];
+
+// A todo has no stored status of its own — it's derived from its tasks,
+// so there's nothing new to keep in sync on the backend.
+// A todo counts as "in progress" as soon as any task has been started
+// or finished — it doesn't require a task to be actively running.
+const STATUS_SORT_ORDER = { in_progress: 0, pending: 1, done: 2 };
+
+function getTodoStatus(todo) {
+  const tasks = todo.tasks || [];
+  if (tasks.length === 0) return 'pending';
+  if (tasks.every((t) => t.status === 'done')) return 'done';
+  if (tasks.some((t) => t.status === 'in_progress' || t.status === 'done')) return 'in_progress';
+  return 'pending';
+}
+
 function getDueInfo(dueDate) {
-  if (!dueDate) return { text: 'No due date', status: 'none' };
+  if (!dueDate) return { text: '', status: 'none' };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -171,11 +233,6 @@ function getDueInfo(dueDate) {
   };
 }
 
-function truncate(text, max = 70) {
-  if (!text) return '';
-  return text.length > max ? text.slice(0, max).trimEnd() + '…' : text;
-}
-
 function groupTasks(tasks) {
   return {
     in_progress: tasks.filter((t) => t.status === 'in_progress'),
@@ -184,21 +241,28 @@ function groupTasks(tasks) {
   };
 }
 
-/* ---------- Task card ---------- */
+function sortTasksByStatus(tasks) {
+  const order = { in_progress: 0, pending: 1, done: 2 };
+  return [...tasks].sort((a, b) => order[a.status] - order[b.status]);
+}
+
+/* ---------- Task card (single line) ---------- */
 
 function TaskCard({ task, onStart, onPause, onFinish, onEdit, onDelete }) {
   const remaining = useLiveRemaining(task);
   const isOver = remaining < 0;
   const isRunning = task.started_at != null;
 
+  useExpiryAlert(task, remaining, isRunning);
+
+  const isExpired = isRunning && isOver && task.status !== 'done';
+
   return (
-    <div className={`task-card task-card--${task.status}`}>
-      <div className="task-card-top">
-        <span className="task-card-name">{task.name}</span>
-        <span className={`task-timer ${isOver ? 'task-timer--over' : ''}`}>
-          {formatDuration(remaining)}
-        </span>
-      </div>
+    <div className={`task-card task-card--${task.status} ${isExpired ? 'task-card--expired' : ''}`}>
+      <span className="task-card-name" title={task.name}>{task.name}</span>
+      <span className={`task-timer ${isOver ? 'task-timer--over' : ''}`}>
+        {formatDuration(remaining)}
+      </span>
       <div className="task-card-actions">
         {task.status !== 'done' && !isRunning && (
           <button className="icon-button" onClick={() => onStart(task.id)} aria-label="Start task">
@@ -230,21 +294,27 @@ function TaskCard({ task, onStart, onPause, onFinish, onEdit, onDelete }) {
   );
 }
 
-function TaskSection({ title, variant, tasks, taskHandlers }) {
-  if (tasks.length === 0) return null;
+/* ---------- Task status filter pills ---------- */
+
+function TaskFilterRow({ grouped, activeFilter, onSelect }) {
   return (
-    <div className={`task-section task-section--${variant}`}>
-      <h4 className="task-section-heading">{title}</h4>
-      <div className="task-list">
-        {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} {...taskHandlers} />
-        ))}
-      </div>
+    <div className="task-filter-row">
+      {STATUS_ORDER_LIST.map((s) => (
+        <button
+          key={s}
+          type="button"
+          className={`task-filter-pill task-filter-pill--${s} ${activeFilter === s ? 'is-active' : ''}`}
+          onClick={() => onSelect(s)}
+        >
+          {STATUS_CONFIG[s].label}
+          <span className="task-filter-count">{grouped[s].length}</span>
+        </button>
+      ))}
     </div>
   );
 }
 
-/* ---------- Todo card ---------- */
+/* ---------- Todo card (single line) ---------- */
 
 function TodoCard({
   todo,
@@ -260,31 +330,32 @@ function TodoCard({
   onCloseTaskForm,
   onTaskSubmit,
   taskHandlers,
+  taskFilter,
+  onSetTaskFilter,
 }) {
-  const priority = PRIORITY_CONFIG[todo.priority] || PRIORITY_CONFIG.medium;
+  const status = getTodoStatus(todo);
+  const statusInfo = STATUS_CONFIG[status];
   const dueInfo = getDueInfo(todo.due_date);
   const tasks = todo.tasks || [];
   const grouped = groupTasks(tasks);
+  const visibleTasks = taskFilter === 'all' ? sortTasksByStatus(tasks) : grouped[taskFilter] || [];
 
   return (
-    <div className="todo-card" style={{ '--priority-color': priority.color }}>
+    <div className="todo-card" style={{ '--status-color': statusInfo.color }}>
       <div className="todo-card-accent" />
       <div className="todo-card-body">
-        <div className="todo-card-top todo-card-top--clickable" onClick={() => onToggleExpand(todo.id)}>
-          <span className="todo-card-title">{todo.title}</span>
-          <ChevronIcon expanded={isExpanded} />
-        </div>
-
-        {todo.description && (
-          <p className="todo-card-description">{truncate(todo.description)}</p>
-        )}
-
-        <div className="todo-card-bottom">
-          <span className="priority-label" style={{ color: priority.color }}>
-            {priority.label}
+        <div
+          className="todo-card-row todo-card-row--clickable"
+          onClick={() => onToggleExpand(todo.id)}
+        >
+          <span className="todo-card-title" title={todo.title}>{todo.title}</span>
+          <span className="status-label" style={{ color: statusInfo.color }}>
+            {statusInfo.label}
           </span>
-          <span className={`due-pill due-pill--${dueInfo.status}`}>{dueInfo.text}</span>
-          <div className="todo-card-actions">
+          {dueInfo.status !== 'none' && (
+            <span className={`due-pill due-pill--${dueInfo.status}`}>{dueInfo.text}</span>
+          )}
+          <div className="todo-card-actions" onClick={(e) => e.stopPropagation()}>
             <button className="icon-button" onClick={() => onEdit(todo)} aria-label={`Edit "${todo.title}"`}>
               <EditIcon />
             </button>
@@ -296,16 +367,31 @@ function TodoCard({
               <DeleteIcon />
             </button>
           </div>
+          <ChevronIcon expanded={isExpanded} />
         </div>
 
         {isExpanded && (
           <div className="todo-tasks-section">
-            <TaskSection title="In progress" variant="in_progress" tasks={grouped.in_progress} taskHandlers={taskHandlers} />
-            <TaskSection title="Pending" variant="pending" tasks={grouped.pending} taskHandlers={taskHandlers} />
-            <TaskSection title="Done" variant="done" tasks={grouped.done} taskHandlers={taskHandlers} />
+            {tasks.length > 0 && (
+              <TaskFilterRow
+                grouped={grouped}
+                activeFilter={taskFilter}
+                onSelect={(s) => onSetTaskFilter(todo.id, s)}
+              />
+            )}
 
-            {tasks.length === 0 && !taskFormOpen && (
-              <p className="task-empty-state">No tasks yet — break this down into steps.</p>
+            {visibleTasks.length > 0 ? (
+              <div className="task-list">
+                {visibleTasks.map((task) => (
+                  <TaskCard key={task.id} task={task} {...taskHandlers} />
+                ))}
+              </div>
+            ) : (
+              <p className="task-empty-state">
+                {tasks.length === 0
+                  ? 'No tasks yet — break this down into steps.'
+                  : 'No tasks with this status.'}
+              </p>
             )}
 
             {taskFormOpen ? (
@@ -351,7 +437,7 @@ function TodoCard({
 
 /* ---------- Main component ---------- */
 
-const emptyForm = { title: '', description: '', dueDate: '', priority: 'medium' };
+const emptyForm = { title: '', dueDate: '' };
 const emptyTaskForm = { name: '', targetMinutes: 25 };
 
 function Todos() {
@@ -364,6 +450,7 @@ function Todos() {
   const [taskFormOpenFor, setTaskFormOpenFor] = useState(null);
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [taskForm, setTaskForm] = useState(emptyTaskForm);
+  const [taskFilters, setTaskFilters] = useState({});
   const navigate = useNavigate();
 
   const isEditing = editingId !== null;
@@ -391,9 +478,7 @@ function Todos() {
   const openEditForm = (todo) => {
     setForm({
       title: todo.title,
-      description: todo.description || '',
       dueDate: todo.due_date || '',
-      priority: todo.priority,
     });
     setEditingId(todo.id);
     setIsFormOpen(true);
@@ -410,9 +495,7 @@ function Todos() {
     setError('');
     const payload = {
       title: form.title,
-      description: form.description,
       due_date: form.dueDate || null,
-      priority: form.priority,
     };
 
     try {
@@ -451,6 +534,13 @@ function Todos() {
       if (next.has(todoId)) next.delete(todoId);
       else next.add(todoId);
       return next;
+    });
+  };
+
+  const setTaskFilterFor = (todoId, status) => {
+    setTaskFilters((prev) => {
+      const current = prev[todoId] || 'all';
+      return { ...prev, [todoId]: current === status ? 'all' : status };
     });
   };
 
@@ -525,6 +615,11 @@ function Todos() {
     onDelete: handleTaskDelete,
   };
 
+  // Active todos first (in progress, then pending), done ones sink to the bottom.
+  const sortedTodos = [...todos].sort(
+    (a, b) => STATUS_SORT_ORDER[getTodoStatus(a)] - STATUS_SORT_ORDER[getTodoStatus(b)]
+  );
+
   return (
     <div className="todos-page">
       <div id="menu">
@@ -542,7 +637,7 @@ function Todos() {
             </div>
           ) : (
             <div className="todo-list">
-              {todos.map((todo) => (
+              {sortedTodos.map((todo) => (
                 <TodoCard
                   key={todo.id}
                   todo={todo}
@@ -558,6 +653,8 @@ function Todos() {
                   onCloseTaskForm={closeTaskForm}
                   onTaskSubmit={handleTaskSubmit}
                   taskHandlers={taskHandlers}
+                  taskFilter={taskFilters[todo.id] || 'all'}
+                  onSetTaskFilter={setTaskFilterFor}
                 />
               ))}
             </div>
@@ -582,26 +679,10 @@ function Todos() {
               required
               className="data-field"
             />
-            <textarea
-              placeholder="Description (optional)"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="data-field"
-              rows={3}
-            />
             <DueDateField
               value={form.dueDate}
               onChange={(date) => setForm({ ...form, dueDate: date })}
             />
-            <select
-              value={form.priority}
-              onChange={(e) => setForm({ ...form, priority: e.target.value })}
-              className="data-field"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
             <button type="submit" className="signin-button">
               {isEditing ? 'Save changes' : 'Add todo'}
             </button>

@@ -104,10 +104,19 @@
 
 .todos-layout {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  /* minmax(0, 1fr) caps this column at its fair share of the row —
+     without it, a long unbroken string (e.g. a title with no spaces)
+     forces the track wider than the viewport and pushes the sidebar
+     off-screen, since grid tracks default to a min size based on
+     their content's natural width. */
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 28px;
   padding: 32px 48px;
   align-items: start;
+}
+
+.todos-list-panel {
+  min-width: 0;
 }
 
 .panel-heading {
@@ -120,7 +129,7 @@
 .todo-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .empty-state {
@@ -147,41 +156,47 @@
 
 .todo-card-accent {
   width: 6px;
-  background: var(--priority-color);
+  background: var(--status-color);
   flex-shrink: 0;
 }
 
 .todo-card-body {
   flex: 1;
-  padding: 14px 16px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Single-line todo row: title, status, due, actions, expand chevron. */
+.todo-card-row {
+  display: flex;
+  align-items: center;
   gap: 10px;
   min-width: 0;
 }
 
-.todo-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.todo-card-top--clickable {
+.todo-card-row--clickable {
   cursor: pointer;
   color: inherit;
 }
 
-.todo-card-top--clickable:hover .todo-card-title {
-  color: #8B5CF6;
+/* A neutral dark indigo, deliberately distinct from every status color
+   (grey pending, purple in-progress, green done) so hovering a todo
+   never looks like a status change. */
+.todo-card-row--clickable:hover .todo-card-title {
+  color: #1E1B4B;
 }
 
-.todo-card-top--clickable svg {
+.todo-card-row--clickable svg {
   color: #9CA3AF;
   flex-shrink: 0;
 }
 
 .todo-card-title {
+  flex: 1;
+  min-width: 0;
   font-weight: 600;
   color: #1F2937;
   overflow: hidden;
@@ -190,39 +205,43 @@
   transition: color 0.15s ease;
 }
 
-.priority-label {
+.status-label {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   flex-shrink: 0;
-}
-
-.todo-card-bottom {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  white-space: nowrap;
 }
 
 .todo-card-actions {
   display: flex;
-  gap: 4px;
-  margin-left: auto;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 .due-pill {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
   padding: 3px 10px;
   border-radius: 999px;
   background: #F3F4F6;
   color: #6B7280;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .due-pill--overdue { background: #FEE2E2; color: #B91C1C; }
 .due-pill--today { background: #FEF3C7; color: #92400E; }
 .due-pill--soon { color: #374151; }
+
+/* On narrow screens the left accent bar already communicates status,
+   so drop the redundant text label to leave more room for the title. */
+@media (max-width: 480px) {
+  .status-label {
+    display: none;
+  }
+}
 
 /* ---- Create panel ---- */
 
@@ -411,13 +430,6 @@
   border-radius: 4px;
 }
 
-.todo-card-description {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #6B7280;
-  line-height: 1.4;
-}
-
 .icon-button {
   background: none;
   border: none;
@@ -483,57 +495,86 @@ textarea.data-field {
 
 .todo-tasks-section {
   border-top: 1px solid #F3F4F6;
-  padding-top: 14px;
-  margin-top: 6px;
+  padding-top: 10px;
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
-.task-section-heading {
-  margin: 0 0 8px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #9CA3AF;
+/* Status filter pills — replace the old always-expanded section headers.
+   Tapping a pill filters the task list to that status; tapping the
+   active pill again clears the filter back to "all". */
+.task-filter-row {
   display: flex;
-  align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
-.task-section-heading::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  flex-shrink: 0;
+.task-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #F3F4F6;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.task-section--in_progress .task-section-heading {
-  color: #8B5CF6;
+.task-filter-pill:hover {
+  background: #E5E7EB;
 }
 
-.task-section--done .task-section-heading {
-  color: #10B981;
+.task-filter-count {
+  font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 0.7rem;
+}
+
+.task-filter-pill--in_progress.is-active {
+  background: #EDE7FE;
+  color: #6D28D9;
+  border-color: #C4B5FD;
+}
+
+.task-filter-pill--pending.is-active {
+  background: #F3F4F6;
+  color: #374151;
+  border-color: #D1D5DB;
+}
+
+.task-filter-pill--done.is-active {
+  background: #D1FAE5;
+  color: #047857;
+  border-color: #6EE7B7;
 }
 
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
+/* Single-line task row: name, timer, actions. */
 .task-card {
   background: #fff;
   border: 1px solid #EEF0F2;
   border-left: 3px solid #D1D5DB;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 7px 10px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 10px;
+  /* Browsers default to an I-beam cursor over selectable text; these
+     rows aren't inputs, so make that explicit. */
+  cursor: default;
 }
 
 .task-card--in_progress {
@@ -546,15 +587,20 @@ textarea.data-field {
   background: #F7FDFB;
 }
 
-.task-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+/* Pulses when a running task's timer has hit zero, until acknowledged
+   (start/pause/finish/edit all still work normally while this shows). */
+@keyframes task-expired-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+  50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
+}
+
+.task-card--expired {
+  border-left-color: #EF4444;
+  animation: task-expired-pulse 1.6s ease-in-out infinite;
 }
 
 .task-card-name {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: #1F2937;
   flex: 1;
@@ -571,13 +617,14 @@ textarea.data-field {
 
 .task-timer {
   font-variant-numeric: tabular-nums;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #4B5563;
   background: #EEF0F2;
-  padding: 2px 9px;
+  padding: 2px 8px;
   border-radius: 6px;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .task-timer--over {
@@ -588,7 +635,8 @@ textarea.data-field {
 .task-card-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
+  flex-shrink: 0;
 }
 
 .task-empty-state {
@@ -605,7 +653,7 @@ textarea.data-field {
   background: #fff;
   border: 1px dashed #D1D5DB;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   color: #6B7280;
   font-size: 0.85rem;
   font-weight: 500;
