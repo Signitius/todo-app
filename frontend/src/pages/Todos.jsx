@@ -156,6 +156,18 @@ function CheckIcon() {
   );
 }
 
+function Spinner({ size = 14 }) {
+  return (
+    <svg className="spinner" width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle
+        cx="12" cy="12" r="9"
+        stroke="currentColor" strokeWidth="3" strokeLinecap="round"
+        strokeDasharray="28.3" strokeDashoffset="20"
+      />
+    </svg>
+  );
+}
+
 /* ---------- Due date field ---------- */
 
 function DueDateField({ value, onChange }) {
@@ -248,7 +260,7 @@ function sortTasksByStatus(tasks) {
 
 /* ---------- Task card (single line) ---------- */
 
-function TaskCard({ task, onStart, onPause, onFinish, onEdit, onDelete }) {
+function TaskCard({ task, onStart, onPause, onFinish, onEdit, onDelete, isActionPending, isDeleting }) {
   const remaining = useLiveRemaining(task);
   const isOver = remaining < 0;
   const isRunning = task.started_at != null;
@@ -256,38 +268,40 @@ function TaskCard({ task, onStart, onPause, onFinish, onEdit, onDelete }) {
   useExpiryAlert(task, remaining, isRunning);
 
   const isExpired = isRunning && isOver && task.status !== 'done';
+  const busy = isActionPending || isDeleting;
 
   return (
-    <div className={`task-card task-card--${task.status} ${isExpired ? 'task-card--expired' : ''}`}>
+    <div className={`task-card task-card--${task.status} ${isExpired ? 'task-card--expired' : ''} ${busy ? 'task-card--busy' : ''}`}>
       <span className="task-card-name" title={task.name}>{task.name}</span>
       <span className={`task-timer ${isOver ? 'task-timer--over' : ''}`}>
         {formatDuration(remaining)}
       </span>
       <div className="task-card-actions">
         {task.status !== 'done' && !isRunning && (
-          <button className="icon-button" onClick={() => onStart(task.id)} aria-label="Start task">
-            <PlayIcon />
+          <button className="icon-button" onClick={() => onStart(task.id)} disabled={busy} aria-label="Start task">
+            {isActionPending ? <Spinner /> : <PlayIcon />}
           </button>
         )}
         {isRunning && (
-          <button className="icon-button" onClick={() => onPause(task.id)} aria-label="Pause task">
-            <PauseIcon />
+          <button className="icon-button" onClick={() => onPause(task.id)} disabled={busy} aria-label="Pause task">
+            {isActionPending ? <Spinner /> : <PauseIcon />}
           </button>
         )}
         {task.status !== 'done' && (
-          <button className="icon-button" onClick={() => onFinish(task.id)} aria-label="Finish task">
-            <CheckIcon />
+          <button className="icon-button" onClick={() => onFinish(task.id)} disabled={busy} aria-label="Finish task">
+            {isActionPending ? <Spinner /> : <CheckIcon />}
           </button>
         )}
-        <button className="icon-button" onClick={() => onEdit(task)} aria-label={`Edit task "${task.name}"`}>
+        <button className="icon-button" onClick={() => onEdit(task)} disabled={busy} aria-label={`Edit task "${task.name}"`}>
           <EditIcon />
         </button>
         <button
           className="icon-button icon-button--danger"
           onClick={() => onDelete(task.id)}
+          disabled={busy}
           aria-label={`Delete task "${task.name}"`}
         >
-          <DeleteIcon />
+          {isDeleting ? <Spinner /> : <DeleteIcon />}
         </button>
       </div>
     </div>
@@ -332,6 +346,10 @@ function TodoCard({
   taskHandlers,
   taskFilter,
   onSetTaskFilter,
+  isDeleting,
+  savingTaskForm,
+  taskActionIds,
+  deletingTaskIds,
 }) {
   const status = getTodoStatus(todo);
   const statusInfo = STATUS_CONFIG[status];
@@ -341,7 +359,7 @@ function TodoCard({
   const visibleTasks = taskFilter === 'all' ? sortTasksByStatus(tasks) : grouped[taskFilter] || [];
 
   return (
-    <div className="todo-card" style={{ '--status-color': statusInfo.color }}>
+    <div className={`todo-card ${isDeleting ? 'todo-card--busy' : ''}`} style={{ '--status-color': statusInfo.color }}>
       <div className="todo-card-accent" />
       <div className="todo-card-body">
         <div
@@ -356,15 +374,16 @@ function TodoCard({
             <span className={`due-pill due-pill--${dueInfo.status}`}>{dueInfo.text}</span>
           )}
           <div className="todo-card-actions" onClick={(e) => e.stopPropagation()}>
-            <button className="icon-button" onClick={() => onEdit(todo)} aria-label={`Edit "${todo.title}"`}>
+            <button className="icon-button" onClick={() => onEdit(todo)} disabled={isDeleting} aria-label={`Edit "${todo.title}"`}>
               <EditIcon />
             </button>
             <button
               className="icon-button icon-button--danger"
               onClick={() => onDelete(todo.id)}
+              disabled={isDeleting}
               aria-label={`Delete "${todo.title}"`}
             >
-              <DeleteIcon />
+              {isDeleting ? <Spinner /> : <DeleteIcon />}
             </button>
           </div>
           <ChevronIcon expanded={isExpanded} />
@@ -383,7 +402,13 @@ function TodoCard({
             {visibleTasks.length > 0 ? (
               <div className="task-list">
                 {visibleTasks.map((task) => (
-                  <TaskCard key={task.id} task={task} {...taskHandlers} />
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    {...taskHandlers}
+                    isActionPending={taskActionIds.has(task.id)}
+                    isDeleting={deletingTaskIds.has(task.id)}
+                  />
                 ))}
               </div>
             ) : (
@@ -415,11 +440,12 @@ function TodoCard({
                   />
                 </label>
                 <div className="task-form-buttons">
-                  <button type="button" className="task-cancel-button" onClick={onCloseTaskForm}>
+                  <button type="button" className="task-cancel-button" onClick={onCloseTaskForm} disabled={savingTaskForm}>
                     Cancel
                   </button>
-                  <button type="submit" className="signin-button task-form-submit">
-                    {editingTaskId ? 'Save' : 'Add'}
+                  <button type="submit" className="signin-button task-form-submit" disabled={savingTaskForm}>
+                    {savingTaskForm && <Spinner />}
+                    {savingTaskForm ? 'Saving…' : (editingTaskId ? 'Save' : 'Add')}
                   </button>
                 </div>
               </form>
@@ -440,6 +466,19 @@ function TodoCard({
 const emptyForm = { title: '', dueDate: '' };
 const emptyTaskForm = { name: '', targetMinutes: 25 };
 
+// Small helper for tracking "which ids currently have a request in flight".
+function useIdSet() {
+  const [ids, setIds] = useState(new Set());
+  const add = (id) => setIds((prev) => new Set(prev).add(id));
+  const remove = (id) =>
+    setIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  return [ids, add, remove];
+}
+
 function Todos() {
   const [todos, setTodos] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -453,10 +492,21 @@ function Todos() {
   const [taskFilters, setTaskFilters] = useState({});
   const navigate = useNavigate();
 
+  // Loading / in-flight state, purely for UI feedback while requests are slow.
+  const [todosLoading, setTodosLoading] = useState(true);
+  const [savingTodoForm, setSavingTodoForm] = useState(false);
+  const [deletingTodoIds, addDeletingTodo, removeDeletingTodo] = useIdSet();
+  const [savingTaskForm, setSavingTaskForm] = useState(false);
+  const [taskActionIds, addTaskAction, removeTaskAction] = useIdSet();
+  const [deletingTaskIds, addDeletingTask, removeDeletingTask] = useIdSet();
+
   const isEditing = editingId !== null;
 
   useEffect(() => {
-    fetchTodos();
+    (async () => {
+      await fetchTodos();
+      setTodosLoading(false);
+    })();
   }, []);
 
   const fetchTodos = async () => {
@@ -493,6 +543,7 @@ function Todos() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSavingTodoForm(true);
     const payload = {
       title: form.title,
       due_date: form.dueDate || null,
@@ -505,20 +556,25 @@ function Todos() {
         await api.post('todos/', payload);
       }
       closeForm();
-      fetchTodos();
+      await fetchTodos();
     } catch (err) {
       setError(isEditing ? 'Could not update todo.' : 'Could not create todo.');
+    } finally {
+      setSavingTodoForm(false);
     }
   };
 
   const handleDelete = async (id) => {
     setError('');
+    addDeletingTodo(id);
     try {
       await api.delete(`todos/${id}/`);
       if (editingId === id) closeForm();
-      fetchTodos();
+      await fetchTodos();
     } catch (err) {
       setError('Could not delete todo.');
+    } finally {
+      removeDeletingTodo(id);
     }
   };
 
@@ -568,6 +624,7 @@ function Todos() {
   const handleTaskSubmit = async (e, todoId) => {
     e.preventDefault();
     setError('');
+    setSavingTaskForm(true);
     const payload = {
       todo: todoId,
       name: taskForm.name,
@@ -581,29 +638,37 @@ function Todos() {
         await api.post('tasks/', payload);
       }
       closeTaskForm();
-      fetchTodos();
+      await fetchTodos();
     } catch (err) {
       setError('Could not save task.');
+    } finally {
+      setSavingTaskForm(false);
     }
   };
 
   const handleTaskDelete = async (taskId) => {
     setError('');
+    addDeletingTask(taskId);
     try {
       await api.delete(`tasks/${taskId}/`);
-      fetchTodos();
+      await fetchTodos();
     } catch (err) {
       setError('Could not delete task.');
+    } finally {
+      removeDeletingTask(taskId);
     }
   };
 
   const handleTaskAction = async (taskId, action) => {
     setError('');
+    addTaskAction(taskId);
     try {
       await api.post(`tasks/${taskId}/${action}/`);
-      fetchTodos();
+      await fetchTodos();
     } catch (err) {
       setError('Could not update task timer.');
+    } finally {
+      removeTaskAction(taskId);
     }
   };
 
@@ -631,7 +696,12 @@ function Todos() {
         <div className="todos-list-panel">
           <h2 className="panel-heading">Your todos</h2>
 
-          {todos.length === 0 ? (
+          {todosLoading ? (
+            <div className="todos-loading-state">
+              <Spinner size={22} />
+              <span>Loading your todos…</span>
+            </div>
+          ) : todos.length === 0 ? (
             <div className="empty-state">
               Nothing on your list yet. Add your first todo to get started.
             </div>
@@ -655,6 +725,10 @@ function Todos() {
                   taskHandlers={taskHandlers}
                   taskFilter={taskFilters[todo.id] || 'all'}
                   onSetTaskFilter={setTaskFilterFor}
+                  isDeleting={deletingTodoIds.has(todo.id)}
+                  savingTaskForm={savingTaskForm}
+                  taskActionIds={taskActionIds}
+                  deletingTaskIds={deletingTaskIds}
                 />
               ))}
             </div>
@@ -683,8 +757,9 @@ function Todos() {
               value={form.dueDate}
               onChange={(date) => setForm({ ...form, dueDate: date })}
             />
-            <button type="submit" className="signin-button">
-              {isEditing ? 'Save changes' : 'Add todo'}
+            <button type="submit" className="signin-button" disabled={savingTodoForm}>
+              {savingTodoForm && <Spinner />}
+              {savingTodoForm ? 'Saving…' : (isEditing ? 'Save changes' : 'Add todo')}
             </button>
           </form>
         </div>

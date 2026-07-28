@@ -58,6 +58,10 @@
   width: 100%;
   font-weight: 600;
   transition: background-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .signin-button:hover {
@@ -140,13 +144,44 @@
   text-align: center;
 }
 
+.todos-loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  color: #6B7280;
+  font-size: 0.9rem;
+}
+
+/* ---- Spinner + busy states ---- */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.todo-card--busy,
+.task-card--busy {
+  opacity: 0.65;
+}
+
 .todo-card {
   display: flex;
   background: #fff;
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(30, 27, 75, 0.08);
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
 }
 
 .todo-card:hover {
